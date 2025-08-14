@@ -20,8 +20,12 @@ footer { margin-top:20px; font-size:0.9em; color:#6c757d; }
 <script>
 async function fetchPrices() {
   try {
-    const res = await fetch("https://api.exchangerate.host/latest?base=USD&symbols=IQD,XAU");
-    const data = await res.json();
+    // استخدام allorigins لتجاوز مشاكل CORS على GitHub Pages
+    const proxyUrl = "https://api.allorigins.win/get?url=";
+    const targetUrl = encodeURIComponent("https://api.exchangerate.host/latest?base=USD&symbols=IQD,XAU");
+    const res = await fetch(proxyUrl + targetUrl);
+    const dataWrapped = await res.json();
+    const data = JSON.parse(dataWrapped.contents);
 
     const usdRate = data.rates.IQD;
     const goldPriceUSD = 1 / data.rates.XAU; 
@@ -37,7 +41,7 @@ async function fetchPrices() {
   }
 }
 
-// جلب الأسعار فوراً وتحديث كل دقيقة
+// جلب الأسعار فورًا وتحديث كل دقيقة
 fetchPrices();
 setInterval(fetchPrices, 60000);
 </script>
