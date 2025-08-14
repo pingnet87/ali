@@ -50,22 +50,33 @@
   <script>
     async function fetchPrices() {
       try {
-        // سعر الدولار مقابل الدينار العراقي
-        const usdRes = await fetch("https://api.exchangerate.host/latest?base=USD&symbols=IQD");
+        // =========================
+        // 1. سعر الدولار مقابل الدينار العراقي
+        // =========================
+        const usdRes = await fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent("https://api.exchangerate.host/latest?base=USD&symbols=IQD"));
         const usdData = await usdRes.json();
         const usdRate = usdData.rates.IQD;
         document.getElementById("usd").innerText = `💵 الدولار = ${usdRate.toFixed(2)} دينار`;
 
-        // سعر الذهب بالدينار العراقي باستخدام مفتاحك
-        const goldRes = await fetch("https://api.metals-api.com/v1/latest?access_key=6de8eae76be7dc1240f8dd8a6142f7ab&base=USD&symbols=XAU");
+        // =========================
+        // 2. سعر الذهب بالأونصة بالدينار العراقي
+        // =========================
+        const metalsURL = "https://api.metals-api.com/v1/latest?access_key=6de8eae76be7dc1240f8dd8a6142f7ab&base=USD&symbols=XAU";
+        const goldRes = await fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent(metalsURL));
         const goldData = await goldRes.json();
-        const goldPriceUSD = 1 / goldData.rates.XAU; // سعر الأونصة بالدولار
-        const goldPriceIQD = goldPriceUSD * usdRate; // تحويل للدينار
+
+        // سعر الذهب بالدولار للأونصة
+        const goldPriceUSD = 1 / goldData.rates.XAU; 
+        const goldPriceIQD = goldPriceUSD * usdRate; 
         document.getElementById("gold").innerText = `🥇 الذهب = ${goldPriceIQD.toFixed(0)} دينار للأونصة`;
 
-        // وقت التحديث
+        // =========================
+        // 3. آخر تحديث
+        // =========================
         document.getElementById("lastUpdate").innerText = new Date().toLocaleString();
+
       } catch (error) {
+        console.error(error);
         document.getElementById("usd").innerText = "خطأ في جلب سعر الدولار";
         document.getElementById("gold").innerText = "خطأ في جلب سعر الذهب";
       }
