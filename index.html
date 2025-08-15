@@ -106,6 +106,22 @@
             padding: 5px 8px;
             font-size: 12px;
         }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .summary-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .summary-card h4 {
+            margin-top: 0;
+            color: #4285f4;
+        }
         @media (min-width: 768px) {
             .container {
                 flex-direction: row;
@@ -204,19 +220,25 @@
 
 <div class="form-container" style="margin-top: 20px;">
     <h3>إجماليات:</h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-        <div>
+    <div class="summary-grid">
+        <div class="summary-card">
+            <h4>المشتركين</h4>
             <p>إجمالي المشتركين: <strong><span id="totalCustomers">0</span></strong></p>
             <p>المسددون: <strong><span id="paidCustomers">0</span></strong></p>
             <p>غير المسددين: <strong><span id="unpaidCustomers">0</span></strong></p>
         </div>
-        <div>
-            <p>إجمالي المستحقات: <strong><span id="totalDue">0</span> دينار</strong></p>
-            <p>إجمالي المدفوع: <strong><span id="totalPaid">0</span> دينار</strong></p>
+        <div class="summary-card">
+            <h4>المدفوعات</h4>
+            <p>إجمالي الأجل: <strong><span id="totalDue">0</span> دينار</strong></p>
+            <p>إجمالي المسدد: <strong><span id="totalPaid">0</span> دينار</strong></p>
             <p>المتبقي: <strong><span id="totalRemaining">0</span> دينار</strong></p>
+            <p>نسبة السداد: <strong><span id="paymentPercentage">0%</span></strong></p>
         </div>
-        <div>
-            <p>عمولات المسوقين: <strong><span id="totalCommissions">0</span> دينار</strong></p>
+        <div class="summary-card">
+            <h4>عمولات المسوقين</h4>
+            <p>إجمالي العمولات: <strong><span id="totalCommissions">0</span> دينار</strong></p>
+            <p>متوسط العمولة: <strong><span id="avgCommission">0</span> دينار</strong></p>
+            <p>نسبة العمولة: <strong><span id="commissionPercentage">0%</span></strong></p>
         </div>
     </div>
 </div>
@@ -412,6 +434,7 @@ function updateCustomersTable() {
     // حساب الإجماليات
     const totalCustomers = customers.length;
     const paidCustomers = customers.filter(c => c.paid).length;
+    const unpaidCustomers = totalCustomers - paidCustomers;
     
     const totalDue = customers.reduce((sum, c) => {
         const plan = c.customPlan || subscriptionPlans[c.subscription];
@@ -427,13 +450,20 @@ function updateCustomersTable() {
             return sum + plan.commission;
         }, 0);
     
+    const paymentPercentage = totalDue > 0 ? Math.round((totalPaid / totalDue) * 100) : 0;
+    const commissionPercentage = totalPaid > 0 ? Math.round((totalCommissions / totalPaid) * 100) : 0;
+    const avgCommission = paidCustomers > 0 ? Math.round(totalCommissions / paidCustomers) : 0;
+    
     document.getElementById("totalCustomers").textContent = totalCustomers;
     document.getElementById("paidCustomers").textContent = paidCustomers;
-    document.getElementById("unpaidCustomers").textContent = totalCustomers - paidCustomers;
+    document.getElementById("unpaidCustomers").textContent = unpaidCustomers;
     document.getElementById("totalDue").textContent = totalDue.toLocaleString();
     document.getElementById("totalPaid").textContent = totalPaid.toLocaleString();
     document.getElementById("totalRemaining").textContent = (totalDue - totalPaid).toLocaleString();
     document.getElementById("totalCommissions").textContent = totalCommissions.toLocaleString();
+    document.getElementById("paymentPercentage").textContent = paymentPercentage + "%";
+    document.getElementById("commissionPercentage").textContent = commissionPercentage + "%";
+    document.getElementById("avgCommission").textContent = avgCommission.toLocaleString();
 }
 
 // حفظ البيانات
