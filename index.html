@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة مشتركي الإنترنت</title>
+    <title>نظام إدارة المشتركين والوكلاء</title>
     <style>
         * {
             box-sizing: border-box;
@@ -94,6 +94,7 @@
         .standard { background-color: #c8e6c9; color: #2e7d32; }
         .nb1 { background-color: #ffccbc; color: #e64a19; }
         .other { background-color: #e0e0e0; color: #424242; }
+        .agent { background-color: #e3f2fd; color: #0d47a1; }
         #customAmountContainer {
             display: none;
             margin-top: 10px;
@@ -122,6 +123,25 @@
             margin-top: 0;
             color: #4285f4;
         }
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            background: #e0e0e0;
+        }
+        .tab.active {
+            background: #4285f4;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
         @media (min-width: 768px) {
             .container {
                 flex-direction: row;
@@ -139,106 +159,202 @@
 </head>
 <body>
 
-<h1 style="color: #4285f4; text-align: center;">إدارة مشتركي الإنترنت</h1>
+<h1 style="color: #4285f4; text-align: center;">نظام إدارة المشتركين والوكلاء</h1>
 
-<div class="container">
-    <!-- قسم إضافة مشترك جديد -->
-    <div class="form-container">
-        <h2>إضافة/تعديل مشترك</h2>
-        <input type="hidden" id="editId" value="">
-        <div class="form-group">
-            <label>اسم المشترك:</label>
-            <input type="text" id="customerName">
+<div class="tabs">
+    <div class="tab active" onclick="openTab('customers')">المشتركين</div>
+    <div class="tab" onclick="openTab('agents')">الوكلاء</div>
+</div>
+
+<!-- قسم المشتركين -->
+<div id="customers" class="tab-content active">
+    <div class="container">
+        <!-- قسم إضافة مشترك جديد -->
+        <div class="form-container">
+            <h2>إضافة/تعديل مشترك</h2>
+            <input type="hidden" id="editId" value="">
+            <div class="form-group">
+                <label>اسم المشترك:</label>
+                <input type="text" id="customerName">
+            </div>
+            <div class="form-group">
+                <label>نوع الاشتراك:</label>
+                <select id="subscriptionType" onchange="checkSubscriptionType()">
+                    <option value="nb1">NB1 - 25,000 دينار</option>
+                    <option value="max">ماكس - 30,000 دينار</option>
+                    <option value="standard">ستاندرد - 50,000 دينار</option>
+                    <option value="plus">بلص - 35,000 دينار</option>
+                    <option value="other">أخرى</option>
+                </select>
+                <div id="customAmountContainer">
+                    <label>المبلغ المخصص:</label>
+                    <input type="number" id="customAmount">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>اسم المسوق:</label>
+                <input type="text" id="marketer">
+            </div>
+            <div class="form-group">
+                <label>عمولة المسوق:</label>
+                <input type="number" id="customCommission" value="0">
+            </div>
+            <div class="form-group">
+                <label>تاريخ الاشتراك:</label>
+                <input type="date" id="subscriptionDate">
+            </div>
+            <button onclick="saveCustomer()">حفظ</button>
+            <button onclick="cancelEdit()" style="display: none; background-color: #9e9e9e;" id="cancelBtn">إلغاء</button>
         </div>
-        <div class="form-group">
-            <label>نوع الاشتراك:</label>
-            <select id="subscriptionType" onchange="checkSubscriptionType()">
-                <option value="nb1">NB1 - 25,000 دينار</option>
-                <option value="max">ماكس - 30,000 دينار</option>
-                <option value="standard">ستاندرد - 50,000 دينار</option>
-                <option value="plus">بلص - 35,000 دينار</option>
-                <option value="other">أخرى</option>
-            </select>
-            <div id="customAmountContainer">
-                <label>المبلغ المخصص:</label>
-                <input type="number" id="customAmount">
+
+        <!-- قسم تسديد الدفعات -->
+        <div class="form-container">
+            <h2>تسديد دفعة</h2>
+            <div class="form-group">
+                <label>اختر المشترك:</label>
+                <select id="paymentCustomer"></select>
+            </div>
+            <div class="form-group">
+                <label>المبلغ المدفوع:</label>
+                <input type="number" id="paymentAmount">
+            </div>
+            <div class="form-group">
+                <label>تاريخ الدفعة:</label>
+                <input type="date" id="paymentDate">
+            </div>
+            <button onclick="addPayment()">تسجيل الدفع</button>
+        </div>
+    </div>
+
+    <h2 style="color: #4285f4; text-align: center;">كشف حسابات المشتركين</h2>
+    <div style="overflow-x: auto;">
+        <table id="customersTable">
+            <thead>
+                <tr>
+                    <th>اسم المشترك</th>
+                    <th>نوع الاشتراك</th>
+                    <th>المبلغ</th>
+                    <th>تاريخ الاشتراك</th>
+                    <th>الحالة</th>
+                    <th>المسوق</th>
+                    <th>عمولة</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="form-container" style="margin-top: 20px;">
+        <h3>إجماليات المشتركين:</h3>
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h4>المشتركين</h4>
+                <p>الإجمالي: <strong><span id="totalCustomers">0</span></strong></p>
+                <p>المسددون: <strong><span id="paidCustomers">0</span></strong></p>
+                <p>غير المسددين: <strong><span id="unpaidCustomers">0</span></strong></p>
+            </div>
+            <div class="summary-card">
+                <h4>المدفوعات</h4>
+                <p>إجمالي الأجل: <strong><span id="totalDue">0</span> دينار</strong></p>
+                <p>إجمالي المسدد: <strong><span id="totalPaid">0</span> دينار</strong></p>
+                <p>المتبقي: <strong><span id="totalRemaining">0</span> دينار</strong></p>
+                <p>نسبة السداد: <strong><span id="paymentPercentage">0%</span></strong></p>
+            </div>
+            <div class="summary-card">
+                <h4>عمولات المسوقين</h4>
+                <p>إجمالي العمولات: <strong><span id="totalCommissions">0</span> دينار</strong></p>
+                <p>متوسط العمولة: <strong><span id="avgCommission">0</span> دينار</strong></p>
+                <p>نسبة العمولة: <strong><span id="commissionPercentage">0%</span></strong></p>
             </div>
         </div>
-        <div class="form-group">
-            <label>اسم المسوق:</label>
-            <input type="text" id="marketer">
-        </div>
-        <div class="form-group">
-            <label>عمولة المسوق:</label>
-            <input type="number" id="customCommission" value="0">
-        </div>
-        <div class="form-group">
-            <label>تاريخ الاشتراك:</label>
-            <input type="date" id="subscriptionDate">
-        </div>
-        <button onclick="saveCustomer()">حفظ</button>
-        <button onclick="cancelEdit()" style="display: none; background-color: #9e9e9e;" id="cancelBtn">إلغاء</button>
-    </div>
-
-    <!-- قسم تسديد الدفعات -->
-    <div class="form-container">
-        <h2>تسديد دفعة</h2>
-        <div class="form-group">
-            <label>اختر المشترك:</label>
-            <select id="paymentCustomer"></select>
-        </div>
-        <div class="form-group">
-            <label>المبلغ المدفوع:</label>
-            <input type="number" id="paymentAmount">
-        </div>
-        <div class="form-group">
-            <label>تاريخ الدفعة:</label>
-            <input type="date" id="paymentDate">
-        </div>
-        <button onclick="addPayment()">تسجيل الدفع</button>
     </div>
 </div>
 
-<h2 style="color: #4285f4; text-align: center;">كشف الحسابات</h2>
-<div style="overflow-x: auto;">
-    <table id="customersTable">
-        <thead>
-            <tr>
-                <th>اسم المشترك</th>
-                <th>نوع الاشتراك</th>
-                <th>المبلغ</th>
-                <th>تاريخ الاشتراك</th>
-                <th>الحالة</th>
-                <th>المسوق</th>
-                <th>عمولة</th>
-                <th>إجراءات</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
-</div>
+<!-- قسم الوكلاء -->
+<div id="agents" class="tab-content">
+    <div class="container">
+        <!-- قسم إضافة وكيل جديد -->
+        <div class="form-container">
+            <h2>إضافة/تعديل وكيل</h2>
+            <input type="hidden" id="editAgentId" value="">
+            <div class="form-group">
+                <label>اسم الوكيل:</label>
+                <input type="text" id="agentName">
+            </div>
+            <div class="form-group">
+                <label>رقم الهاتف:</label>
+                <input type="text" id="agentPhone">
+            </div>
+            <div class="form-group">
+                <label>العنوان:</label>
+                <input type="text" id="agentAddress">
+            </div>
+            <button onclick="saveAgent()">حفظ</button>
+            <button onclick="cancelAgentEdit()" style="display: none; background-color: #9e9e9e;" id="cancelAgentBtn">إلغاء</button>
+        </div>
 
-<div class="form-container" style="margin-top: 20px;">
-    <h3>إجماليات:</h3>
-    <div class="summary-grid">
-        <div class="summary-card">
-            <h4>المشتركين</h4>
-            <p>إجمالي المشتركين: <strong><span id="totalCustomers">0</span></strong></p>
-            <p>المسددون: <strong><span id="paidCustomers">0</span></strong></p>
-            <p>غير المسددين: <strong><span id="unpaidCustomers">0</span></strong></p>
+        <!-- قسم سحب الكروت -->
+        <div class="form-container">
+            <h2>سحب كروت</h2>
+            <div class="form-group">
+                <label>اختر الوكيل:</label>
+                <select id="cardAgent"></select>
+            </div>
+            <div class="form-group">
+                <label>عدد الكروت:</label>
+                <input type="number" id="cardsCount" min="1" value="1">
+            </div>
+            <div class="form-group">
+                <label>نوع الكارت:</label>
+                <select id="cardType">
+                    <option value="nb1">NB1</option>
+                    <option value="max">ماكس</option>
+                    <option value="standard">ستاندرد</option>
+                    <option value="plus">بلص</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>تاريخ السحب:</label>
+                <input type="date" id="cardDate">
+            </div>
+            <button onclick="addCards()">تسجيل السحب</button>
         </div>
-        <div class="summary-card">
-            <h4>المدفوعات</h4>
-            <p>إجمالي الأجل: <strong><span id="totalDue">0</span> دينار</strong></p>
-            <p>إجمالي المسدد: <strong><span id="totalPaid">0</span> دينار</strong></p>
-            <p>المتبقي: <strong><span id="totalRemaining">0</span> دينار</strong></p>
-            <p>نسبة السداد: <strong><span id="paymentPercentage">0%</span></strong></p>
-        </div>
-        <div class="summary-card">
-            <h4>عمولات المسوقين</h4>
-            <p>إجمالي العمولات: <strong><span id="totalCommissions">0</span> دينار</strong></p>
-            <p>متوسط العمولة: <strong><span id="avgCommission">0</span> دينار</strong></p>
-            <p>نسبة العمولة: <strong><span id="commissionPercentage">0%</span></strong></p>
+    </div>
+
+    <h2 style="color: #4285f4; text-align: center;">كشف حسابات الوكلاء</h2>
+    <div style="overflow-x: auto;">
+        <table id="agentsTable">
+            <thead>
+                <tr>
+                    <th>اسم الوكيل</th>
+                    <th>هاتف</th>
+                    <th>عنوان</th>
+                    <th>عدد الكروت</th>
+                    <th>إجمالي المبلغ</th>
+                    <th>المسدد</th>
+                    <th>المتبقي</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="form-container" style="margin-top: 20px;">
+        <h3>إجماليات الوكلاء:</h3>
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h4>الوكلاء</h4>
+                <p>عدد الوكلاء: <strong><span id="totalAgents">0</span></strong></p>
+                <p>إجمالي الكروت: <strong><span id="totalCards">0</span></strong></p>
+            </div>
+            <div class="summary-card">
+                <h4>المبالغ</h4>
+                <p>إجمالي المبلغ: <strong><span id="totalAgentsDue">0</span> دينار</strong></p>
+                <p>إجمالي المسدد: <strong><span id="totalAgentsPaid">0</span> دينار</strong></p>
+                <p>المتبقي: <strong><span id="totalAgentsRemaining">0</span> دينار</strong></p>
+            </div>
         </div>
     </div>
 </div>
@@ -253,19 +369,47 @@ const subscriptionPlans = {
     other: { name: "أخرى", price: 0, commission: 0 }
 };
 
+// تعريف أسعار الكروت للوكلاء
+const cardPrices = {
+    nb1: 23000,  // سعر الكارت للوكيل
+    max: 28000,
+    standard: 48000,
+    plus: 33000
+};
+
 // البيانات الأساسية
 let customers = JSON.parse(localStorage.getItem('internetCustomers')) || [];
+let agents = JSON.parse(localStorage.getItem('internetAgents')) || [];
 let currentEditId = null;
+let currentEditAgentId = null;
 
 // عند تحميل الصفحة
 window.onload = function() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById("subscriptionDate").value = today;
     document.getElementById("paymentDate").value = today;
+    document.getElementById("cardDate").value = today;
     
     updateCustomersDropdown();
     updateCustomersTable();
+    updateAgentsDropdown();
+    updateAgentsTable();
 };
+
+// تبديل الألسنة
+function openTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    document.getElementById(tabName).classList.add('active');
+    document.querySelector(`.tab[onclick="openTab('${tabName}')"]`).classList.add('active');
+}
+
+// ========== قسم المشتركين ========== //
 
 // عرض/إخفاء حقل المبلغ المخصص
 function checkSubscriptionType() {
@@ -431,7 +575,7 @@ function updateCustomersTable() {
         </tr>`;
     }).join("");
     
-    // حساب الإجماليات
+    // حساب إجماليات المشتركين
     const totalCustomers = customers.length;
     const paidCustomers = customers.filter(c => c.paid).length;
     const unpaidCustomers = totalCustomers - paidCustomers;
@@ -466,9 +610,155 @@ function updateCustomersTable() {
     document.getElementById("avgCommission").textContent = avgCommission.toLocaleString();
 }
 
+// ========== قسم الوكلاء ========== //
+
+// حفظ/تعديل وكيل
+function saveAgent() {
+    const agentData = {
+        id: currentEditAgentId || Date.now(),
+        name: document.getElementById("agentName").value,
+        phone: document.getElementById("agentPhone").value,
+        address: document.getElementById("agentAddress").value,
+        cards: [],
+        payments: []
+    };
+    
+    if (currentEditAgentId) {
+        // تحديث الوكيل الموجود
+        const index = agents.findIndex(a => a.id === currentEditAgentId);
+        if (index !== -1) {
+            agentData.cards = agents[index].cards;
+            agentData.payments = agents[index].payments;
+            agents[index] = agentData;
+        }
+    } else {
+        // إضافة وكيل جديد
+        agents.push(agentData);
+    }
+    
+    saveData();
+    cancelAgentEdit();
+    updateAgentsDropdown();
+    updateAgentsTable();
+}
+
+// سحب كروت
+function addCards() {
+    const agentId = parseInt(document.getElementById("cardAgent").value);
+    const count = parseInt(document.getElementById("cardsCount").value);
+    const type = document.getElementById("cardType").value;
+    const date = document.getElementById("cardDate").value;
+    
+    const agent = agents.find(a => a.id === agentId);
+    if (agent) {
+        const price = cardPrices[type];
+        const total = count * price;
+        
+        agent.cards.push({
+            type: type,
+            count: count,
+            price: price,
+            total: total,
+            date: date
+        });
+        
+        saveData();
+        updateAgentsTable();
+        document.getElementById("cardsCount").value = 1;
+    }
+}
+
+// تعديل وكيل
+function editAgent(id) {
+    const agent = agents.find(a => a.id === id);
+    if (!agent) return;
+    
+    currentEditAgentId = id;
+    document.getElementById("editAgentId").value = id;
+    document.getElementById("agentName").value = agent.name;
+    document.getElementById("agentPhone").value = agent.phone;
+    document.getElementById("agentAddress").value = agent.address;
+    
+    document.getElementById("cancelAgentBtn").style.display = "block";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// حذف وكيل
+function deleteAgent(id) {
+    if (confirm("هل أنت متأكد من حذف هذا الوكيل؟")) {
+        agents = agents.filter(a => a.id !== id);
+        saveData();
+        updateAgentsDropdown();
+        updateAgentsTable();
+    }
+}
+
+// إلغاء تعديل الوكيل
+function cancelAgentEdit() {
+    currentEditAgentId = null;
+    document.getElementById("editAgentId").value = "";
+    document.getElementById("agentName").value = "";
+    document.getElementById("agentPhone").value = "";
+    document.getElementById("agentAddress").value = "";
+    document.getElementById("cancelAgentBtn").style.display = "none";
+}
+
+// تحديث القائمة المنسدلة للوكلاء
+function updateAgentsDropdown() {
+    const dropdown = document.getElementById("cardAgent");
+    dropdown.innerHTML = agents.map(a => 
+        `<option value="${a.id}">${a.name}</option>`
+    ).join("");
+}
+
+// تحديث جدول الوكلاء
+function updateAgentsTable() {
+    const tableBody = document.querySelector("#agentsTable tbody");
+    tableBody.innerHTML = agents.map(agent => {
+        const totalCards = agent.cards.reduce((sum, c) => sum + c.count, 0);
+        const totalDue = agent.cards.reduce((sum, c) => sum + c.total, 0);
+        const totalPaid = agent.payments.reduce((sum, p) => sum + p.amount, 0);
+        const remaining = totalDue - totalPaid;
+        
+        return `
+        <tr class="agent">
+            <td>${agent.name}</td>
+            <td>${agent.phone}</td>
+            <td>${agent.address}</td>
+            <td>${totalCards}</td>
+            <td>${totalDue.toLocaleString()}</td>
+            <td>${totalPaid.toLocaleString()}</td>
+            <td>${remaining.toLocaleString()}</td>
+            <td>
+                <div class="action-buttons">
+                    <button class="edit" onclick="editAgent(${agent.id})">تعديل</button>
+                    <button class="delete" onclick="deleteAgent(${agent.id})">حذف</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join("");
+    
+    // حساب إجماليات الوكلاء
+    const totalAgents = agents.length;
+    const totalCards = agents.reduce((sum, a) => 
+        sum + a.cards.reduce((s, c) => s + c.count, 0), 0);
+    const totalAgentsDue = agents.reduce((sum, a) => 
+        sum + a.cards.reduce((s, c) => s + c.total, 0), 0);
+    const totalAgentsPaid = agents.reduce((sum, a) => 
+        sum + a.payments.reduce((s, p) => s + p.amount, 0), 0);
+    
+    document.getElementById("totalAgents").textContent = totalAgents;
+    document.getElementById("totalCards").textContent = totalCards;
+    document.getElementById("totalAgentsDue").textContent = totalAgentsDue.toLocaleString();
+    document.getElementById("totalAgentsPaid").textContent = totalAgentsPaid.toLocaleString();
+    document.getElementById("totalAgentsRemaining").textContent = 
+        (totalAgentsDue - totalAgentsPaid).toLocaleString();
+}
+
 // حفظ البيانات
 function saveData() {
     localStorage.setItem('internetCustomers', JSON.stringify(customers));
+    localStorage.setItem('internetAgents', JSON.stringify(agents));
 }
 </script>
 
