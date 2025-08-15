@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام إدارة المشتركين والوكلاء</title>
+    <title>نظام إدارة المشتركين والوكلاء والمصاريف</title>
     <style>
         * {
             box-sizing: border-box;
         }
         body {
-            font-family: Arial;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 10px;
-            background-color: #f5f5f5;
+            background-color: #f5f7fa;
             font-size: 14px;
+            color: #333;
         }
         .container {
             display: flex;
@@ -22,59 +23,100 @@
         }
         .form-container {
             background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+        }
+        .form-container:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
         }
         .form-group {
-            margin-bottom: 12px;
+            margin-bottom: 15px;
         }
         label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #555;
         }
-        input, select {
+        input, select, textarea {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #ddd;
-            border-radius: 4px;
+            border-radius: 6px;
+            font-family: inherit;
+            transition: border 0.3s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: #4285f4;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
         }
         button {
             background-color: #4285f4;
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
+            padding: 12px 15px;
+            border-radius: 6px;
             cursor: pointer;
             width: 100%;
-            margin-top: 5px;
+            margin-top: 8px;
+            font-weight: 600;
+            transition: all 0.3s;
         }
         button:hover {
             background-color: #3367d6;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
         }
         button.delete {
             background-color: #f44336;
         }
+        button.delete:hover {
+            background-color: #d32f2f;
+        }
         button.edit {
             background-color: #ff9800;
+        }
+        button.edit:hover {
+            background-color: #f57c00;
+        }
+        button.secondary {
+            background-color: #757575;
+        }
+        button.secondary:hover {
+            background-color: #616161;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin: 15px 0;
+            margin: 20px 0;
             background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            font-size: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            font-size: 13px;
+            border-radius: 8px;
+            overflow: hidden;
         }
         th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
+            border: 1px solid #e0e0e0;
+            padding: 12px;
             text-align: center;
         }
         th {
             background-color: #4285f4;
             color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f5ff;
         }
         .paid {
             background-color: #e8f5e9;
@@ -83,11 +125,12 @@
             background-color: #ffebee;
         }
         .subscription-badge {
-            padding: 2px 5px;
-            border-radius: 3px;
+            padding: 4px 8px;
+            border-radius: 4px;
             font-weight: bold;
-            font-size: 0.7em;
+            font-size: 0.75em;
             display: inline-block;
+            min-width: 70px;
         }
         .max { background-color: #d1c4e9; color: #4527a0; }
         .plus { background-color: #bbdefb; color: #1565c0; }
@@ -95,42 +138,72 @@
         .nb1 { background-color: #ffccbc; color: #e64a19; }
         .other { background-color: #e0e0e0; color: #424242; }
         .agent { background-color: #e3f2fd; color: #0d47a1; }
-        #customAmountContainer {
+        .expense { background-color: #ffecb3; color: #ff8f00; }
+        #customAmountContainer, #customCommissionContainer {
             display: none;
             margin-top: 10px;
         }
         .action-buttons {
             display: flex;
-            gap: 5px;
+            gap: 6px;
         }
         .action-buttons button {
-            padding: 5px 8px;
+            padding: 6px 10px;
             font-size: 12px;
+            width: auto;
+            flex: 1;
         }
         .summary-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 15px;
             margin-top: 15px;
         }
         .summary-card {
             background: white;
-            padding: 15px;
+            padding: 18px;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.3s;
+        }
+        .summary-card:hover {
+            transform: translateY(-3px);
         }
         .summary-card h4 {
             margin-top: 0;
             color: #4285f4;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        .summary-card p {
+            margin: 8px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+        .summary-card strong {
+            color: #333;
         }
         .tabs {
             display: flex;
             margin-bottom: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
         .tab {
-            padding: 10px 15px;
+            padding: 12px 20px;
             cursor: pointer;
-            background: #e0e0e0;
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            text-align: center;
+            flex: 1;
+        }
+        .tab:hover {
+            background: #eee;
         }
         .tab.active {
             background: #4285f4;
@@ -141,6 +214,123 @@
         }
         .tab-content.active {
             display: block;
+        }
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+        .paid-badge {
+            background-color: #c8e6c9;
+            color: #2e7d32;
+        }
+        .unpaid-badge {
+            background-color: #ffcdd2;
+            color: #c62828;
+        }
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-top: 20px;
+        }
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: #4285f4;
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        .category-badge {
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 0.7em;
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 5px;
+        }
+        .salary { background-color: #c8e6c9; color: #2e7d32; }
+        .office { background-color: #bbdefb; color: #1565c0; }
+        .marketing { background-color: #d1c4e9; color: #4527a0; }
+        .maintenance { background-color: #ffccbc; color: #e64a19; }
+        .other-cat { background-color: #e0e0e0; color: #424242; }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            overflow: auto;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            animation: modalopen 0.4s;
+        }
+        @keyframes modalopen {
+            from {opacity: 0; transform: translateY(-50px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+        .close {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: #333;
+        }
+        .search-container {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .search-container input {
+            flex: 1;
+        }
+        .search-container button {
+            width: auto;
+            padding: 10px 15px;
+        }
+        .print-only {
+            display: none;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .print-area, .print-area * {
+                visibility: visible;
+            }
+            .print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block;
+            }
         }
         @media (min-width: 768px) {
             .container {
@@ -159,11 +349,13 @@
 </head>
 <body>
 
-<h1 style="color: #4285f4; text-align: center;">نظام إدارة المشتركين والوكلاء</h1>
+<h1 style="color: #4285f4; text-align: center; margin-bottom: 10px;">نظام إدارة المشتركين والوكلاء والمصاريف</h1>
 
 <div class="tabs">
     <div class="tab active" onclick="openTab('customers')">المشتركين</div>
     <div class="tab" onclick="openTab('agents')">الوكلاء</div>
+    <div class="tab" onclick="openTab('expenses')">المصاريف</div>
+    <div class="tab" onclick="openTab('reports')">التقارير</div>
 </div>
 
 <!-- قسم المشتركين -->
@@ -175,7 +367,7 @@
             <input type="hidden" id="editId" value="">
             <div class="form-group">
                 <label>اسم المشترك:</label>
-                <input type="text" id="customerName">
+                <input type="text" id="customerName" placeholder="أدخل اسم المشترك">
             </div>
             <div class="form-group">
                 <label>نوع الاشتراك:</label>
@@ -188,20 +380,39 @@
                 </select>
                 <div id="customAmountContainer">
                     <label>المبلغ المخصص:</label>
-                    <input type="number" id="customAmount">
+                    <input type="number" id="customAmount" placeholder="أدخل المبلغ">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>عمولة المسوق:</label>
+                <select id="commissionType" onchange="checkCommissionType()">
+                    <option value="default">عمولة افتراضية حسب الاشتراك</option>
+                    <option value="custom">عمولة مخصصة</option>
+                </select>
+                <div id="customCommissionContainer">
+                    <label>قيمة العمولة المخصصة:</label>
+                    <input type="number" id="customCommission" placeholder="أدخل قيمة العمولة">
                 </div>
             </div>
             <div class="form-group">
                 <label>اسم المسوق:</label>
-                <input type="text" id="marketer">
+                <input type="text" id="marketer" placeholder="أدخل اسم المسوق">
             </div>
             <div class="form-group">
-                <label>عمولة المسوق:</label>
-                <input type="number" id="customCommission" value="0">
+                <label>رقم الهاتف:</label>
+                <input type="text" id="customerPhone" placeholder="أدخل رقم الهاتف">
+            </div>
+            <div class="form-group">
+                <label>العنوان:</label>
+                <input type="text" id="customerAddress" placeholder="أدخل العنوان">
             </div>
             <div class="form-group">
                 <label>تاريخ الاشتراك:</label>
                 <input type="date" id="subscriptionDate">
+            </div>
+            <div class="form-group">
+                <label>ملاحظات:</label>
+                <textarea id="customerNotes" rows="2" placeholder="أدخل أي ملاحظات"></textarea>
             </div>
             <button onclick="saveCustomer()">حفظ</button>
             <button onclick="cancelEdit()" style="display: none; background-color: #9e9e9e;" id="cancelBtn">إلغاء</button>
@@ -216,29 +427,48 @@
             </div>
             <div class="form-group">
                 <label>المبلغ المدفوع:</label>
-                <input type="number" id="paymentAmount">
+                <input type="number" id="paymentAmount" placeholder="أدخل المبلغ المدفوع">
+            </div>
+            <div class="form-group">
+                <label>طريقة الدفع:</label>
+                <select id="paymentMethod">
+                    <option value="cash">نقدي</option>
+                    <option value="bank">تحويل بنكي</option>
+                    <option value="card">بطاقة ائتمان</option>
+                    <option value="other">أخرى</option>
+                </select>
             </div>
             <div class="form-group">
                 <label>تاريخ الدفعة:</label>
                 <input type="date" id="paymentDate">
             </div>
+            <div class="form-group">
+                <label>ملاحظات الدفع:</label>
+                <textarea id="paymentNotes" rows="2" placeholder="أدخل ملاحظات الدفع"></textarea>
+            </div>
             <button onclick="addPayment()">تسجيل الدفع</button>
         </div>
     </div>
 
+    <div class="search-container">
+        <input type="text" id="customerSearch" placeholder="ابحث عن مشترك..." onkeyup="searchCustomers()">
+        <button onclick="printCustomers()" class="no-print"><i class="fas fa-print"></i> طباعة</button>
+    </div>
+
     <h2 style="color: #4285f4; text-align: center;">كشف حسابات المشتركين</h2>
-    <div style="overflow-x: auto;">
+    <div style="overflow-x: auto;" class="print-area">
         <table id="customersTable">
             <thead>
                 <tr>
                     <th>اسم المشترك</th>
+                    <th>هاتف</th>
                     <th>نوع الاشتراك</th>
                     <th>المبلغ</th>
                     <th>تاريخ الاشتراك</th>
                     <th>الحالة</th>
                     <th>المسوق</th>
                     <th>عمولة</th>
-                    <th>إجراءات</th>
+                    <th class="no-print">إجراءات</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -253,6 +483,9 @@
                 <p>الإجمالي: <strong><span id="totalCustomers">0</span></strong></p>
                 <p>المسددون: <strong><span id="paidCustomers">0</span></strong></p>
                 <p>غير المسددين: <strong><span id="unpaidCustomers">0</span></strong></p>
+                <div class="progress-bar">
+                    <div class="progress" id="paymentProgress"></div>
+                </div>
             </div>
             <div class="summary-card">
                 <h4>المدفوعات</h4>
@@ -280,15 +513,19 @@
             <input type="hidden" id="editAgentId" value="">
             <div class="form-group">
                 <label>اسم الوكيل:</label>
-                <input type="text" id="agentName">
+                <input type="text" id="agentName" placeholder="أدخل اسم الوكيل">
             </div>
             <div class="form-group">
                 <label>رقم الهاتف:</label>
-                <input type="text" id="agentPhone">
+                <input type="text" id="agentPhone" placeholder="أدخل رقم الهاتف">
             </div>
             <div class="form-group">
                 <label>العنوان:</label>
-                <input type="text" id="agentAddress">
+                <input type="text" id="agentAddress" placeholder="أدخل العنوان">
+            </div>
+            <div class="form-group">
+                <label>ملاحظات:</label>
+                <textarea id="agentNotes" rows="2" placeholder="أدخل أي ملاحظات"></textarea>
             </div>
             <button onclick="saveAgent()">حفظ</button>
             <button onclick="cancelAgentEdit()" style="display: none; background-color: #9e9e9e;" id="cancelAgentBtn">إلغاء</button>
@@ -318,12 +555,51 @@
                 <label>تاريخ السحب:</label>
                 <input type="date" id="cardDate">
             </div>
+            <div class="form-group">
+                <label>ملاحظات:</label>
+                <textarea id="cardNotes" rows="2" placeholder="أدخل أي ملاحظات"></textarea>
+            </div>
             <button onclick="addCards()">تسجيل السحب</button>
+        </div>
+
+        <!-- قسم تسديد دفعات الوكلاء -->
+        <div class="form-container">
+            <h2>تسديد دفعة وكيل</h2>
+            <div class="form-group">
+                <label>اختر الوكيل:</label>
+                <select id="agentPaymentSelect"></select>
+            </div>
+            <div class="form-group">
+                <label>المبلغ المدفوع:</label>
+                <input type="number" id="agentPaymentAmount" placeholder="أدخل المبلغ المدفوع">
+            </div>
+            <div class="form-group">
+                <label>طريقة الدفع:</label>
+                <select id="agentPaymentMethod">
+                    <option value="cash">نقدي</option>
+                    <option value="bank">تحويل بنكي</option>
+                    <option value="other">أخرى</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>تاريخ الدفعة:</label>
+                <input type="date" id="agentPaymentDate">
+            </div>
+            <div class="form-group">
+                <label>ملاحظات الدفع:</label>
+                <textarea id="agentPaymentNotes" rows="2" placeholder="أدخل ملاحظات الدفع"></textarea>
+            </div>
+            <button onclick="addAgentPayment()">تسجيل الدفع</button>
         </div>
     </div>
 
+    <div class="search-container">
+        <input type="text" id="agentSearch" placeholder="ابحث عن وكيل..." onkeyup="searchAgents()">
+        <button onclick="printAgents()" class="no-print"><i class="fas fa-print"></i> طباعة</button>
+    </div>
+
     <h2 style="color: #4285f4; text-align: center;">كشف حسابات الوكلاء</h2>
-    <div style="overflow-x: auto;">
+    <div style="overflow-x: auto;" class="print-area">
         <table id="agentsTable">
             <thead>
                 <tr>
@@ -334,7 +610,7 @@
                     <th>إجمالي المبلغ</th>
                     <th>المسدد</th>
                     <th>المتبقي</th>
-                    <th>إجراءات</th>
+                    <th class="no-print">إجراءات</th>
                 </tr>
             </thead>
             <tbody></tbody>
@@ -354,11 +630,219 @@
                 <p>إجمالي المبلغ: <strong><span id="totalAgentsDue">0</span> دينار</strong></p>
                 <p>إجمالي المسدد: <strong><span id="totalAgentsPaid">0</span> دينار</strong></p>
                 <p>المتبقي: <strong><span id="totalAgentsRemaining">0</span> دينار</strong></p>
+                <div class="progress-bar">
+                    <div class="progress" id="agentPaymentProgress"></div>
+                </div>
+            </div>
+            <div class="summary-card">
+                <h4>إحصائيات الكروت</h4>
+                <p>NB1: <strong><span id="nb1Cards">0</span></strong></p>
+                <p>ماكس: <strong><span id="maxCards">0</span></strong></p>
+                <p>ستاندرد: <strong><span id="standardCards">0</span></strong></p>
+                <p>بلص: <strong><span id="plusCards">0</span></strong></p>
             </div>
         </div>
     </div>
 </div>
 
+<!-- قسم المصاريف -->
+<div id="expenses" class="tab-content">
+    <div class="container">
+        <!-- قسم إضافة مصروف جديد -->
+        <div class="form-container">
+            <h2>إضافة مصروف</h2>
+            <input type="hidden" id="editExpenseId" value="">
+            <div class="form-group">
+                <label>وصف المصروف:</label>
+                <input type="text" id="expenseDescription" placeholder="أدخل وصف المصروف">
+            </div>
+            <div class="form-group">
+                <label>المبلغ:</label>
+                <input type="number" id="expenseAmount" placeholder="أدخل المبلغ">
+            </div>
+            <div class="form-group">
+                <label>الفئة:</label>
+                <select id="expenseCategory">
+                    <option value="salary">رواتب</option>
+                    <option value="office">مكتبية</option>
+                    <option value="marketing">تسويق</option>
+                    <option value="maintenance">صيانة</option>
+                    <option value="other">أخرى</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>طريقة الدفع:</label>
+                <select id="expensePaymentMethod">
+                    <option value="cash">نقدي</option>
+                    <option value="bank">تحويل بنكي</option>
+                    <option value="card">بطاقة ائتمان</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>التاريخ:</label>
+                <input type="date" id="expenseDate">
+            </div>
+            <div class="form-group">
+                <label>ملاحظات:</label>
+                <textarea id="expenseNotes" rows="2" placeholder="أدخل أي ملاحظات"></textarea>
+            </div>
+            <button onclick="saveExpense()">حفظ</button>
+            <button onclick="cancelExpenseEdit()" style="display: none; background-color: #9e9e9e;" id="cancelExpenseBtn">إلغاء</button>
+        </div>
+
+        <!-- قسم إجماليات المصاريف -->
+        <div class="form-container">
+            <h2>إجماليات المصاريف</h2>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <h4>إجمالي المصاريف</h4>
+                    <p>اليوم: <strong><span id="todayExpenses">0</span> دينار</strong></p>
+                    <p>هذا الشهر: <strong><span id="monthExpenses">0</span> دينار</strong></p>
+                    <p>هذه السنة: <strong><span id="yearExpenses">0</span> دينار</strong></p>
+                    <p>الإجمالي: <strong><span id="totalExpenses">0</span> دينار</strong></p>
+                </div>
+                <div class="summary-card">
+                    <h4>حسب الفئة</h4>
+                    <p>رواتب: <strong><span id="salaryExpenses">0</span> دينار</strong></p>
+                    <p>مكتبية: <strong><span id="officeExpenses">0</span> دينار</strong></p>
+                    <p>تسويق: <strong><span id="marketingExpenses">0</span> دينار</strong></p>
+                    <p>صيانة: <strong><span id="maintenanceExpenses">0</span> دينار</strong></p>
+                    <p>أخرى: <strong><span id="otherExpenses">0</span> دينار</strong></p>
+                </div>
+                <div class="summary-card">
+                    <h4>حسب طريقة الدفع</h4>
+                    <p>نقدي: <strong><span id="cashExpenses">0</span> دينار</strong></p>
+                    <p>تحويل بنكي: <strong><span id="bankExpenses">0</span> دينار</strong></p>
+                    <p>بطاقة ائتمان: <strong><span id="cardExpenses">0</span> دينار</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="expenseSearch" placeholder="ابحث عن مصروف..." onkeyup="searchExpenses()">
+        <select id="expenseFilterCategory" onchange="filterExpenses()">
+            <option value="all">جميع الفئات</option>
+            <option value="salary">رواتب</option>
+            <option value="office">مكتبية</option>
+            <option value="marketing">تسويق</option>
+            <option value="maintenance">صيانة</option>
+            <option value="other">أخرى</option>
+        </select>
+        <input type="month" id="expenseFilterMonth" onchange="filterExpenses()">
+        <button onclick="printExpenses()" class="no-print"><i class="fas fa-print"></i> طباعة</button>
+    </div>
+
+    <h2 style="color: #4285f4; text-align: center;">سجل المصاريف</h2>
+    <div style="overflow-x: auto;" class="print-area">
+        <table id="expensesTable">
+            <thead>
+                <tr>
+                    <th>التاريخ</th>
+                    <th>الوصف</th>
+                    <th>المبلغ</th>
+                    <th>الفئة</th>
+                    <th>طريقة الدفع</th>
+                    <th>ملاحظات</th>
+                    <th class="no-print">إجراءات</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- قسم التقارير -->
+<div id="reports" class="tab-content">
+    <div class="form-container">
+        <h2>التقارير المالية</h2>
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h4>تقرير الإيرادات</h4>
+                <p>إجمالي إيرادات المشتركين: <strong><span id="reportCustomerRevenue">0</span> دينار</strong></p>
+                <p>إجمالي إيرادات الوكلاء: <strong><span id="reportAgentRevenue">0</span> دينار</strong></p>
+                <p>إجمالي الإيرادات: <strong><span id="reportTotalRevenue">0</span> دينار</strong></p>
+            </div>
+            <div class="summary-card">
+                <h4>تقرير المصاريف</h4>
+                <p>إجمالي المصاريف: <strong><span id="reportTotalExpenses">0</span> دينار</strong></p>
+                <p>متوسط المصاريف الشهرية: <strong><span id="reportAvgMonthlyExpenses">0</span> دينار</strong></p>
+                <p>أعلى فئة مصاريف: <strong><span id="reportTopExpenseCategory">-</span></strong></p>
+            </div>
+            <div class="summary-card">
+                <h4>الربحية</h4>
+                <p>صافي الربح: <strong><span id="reportNetProfit">0</span> دينار</strong></p>
+                <p>هامش الربح: <strong><span id="reportProfitMargin">0%</span></strong></p>
+                <p>نسبة المصاريف للإيرادات: <strong><span id="reportExpenseRatio">0%</span></strong></p>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h3>تحليل المصاريف حسب الفئة</h3>
+            <canvas id="expenseChart" height="300"></canvas>
+        </div>
+        
+        <div class="chart-container">
+            <h3>تحليل الإيرادات والمصاريف الشهرية</h3>
+            <canvas id="revenueExpenseChart" height="300"></canvas>
+        </div>
+    </div>
+    
+    <div class="form-container">
+        <h2>تقرير مخصص</h2>
+        <div class="form-group">
+            <label>نوع التقرير:</label>
+            <select id="reportType">
+                <option value="monthly">شهري</option>
+                <option value="yearly">سنوي</option>
+                <option value="custom">مخصص</option>
+            </select>
+        </div>
+        <div id="customReportRange" style="display: none;">
+            <div class="form-group">
+                <label>من تاريخ:</label>
+                <input type="date" id="reportFromDate">
+            </div>
+            <div class="form-group">
+                <label>إلى تاريخ:</label>
+                <input type="date" id="reportToDate">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>الفئة:</label>
+            <select id="reportCategory">
+                <option value="all">الكل</option>
+                <option value="customers">المشتركين فقط</option>
+                <option value="agents">الوكلاء فقط</option>
+                <option value="expenses">المصاريف فقط</option>
+            </select>
+        </div>
+        <button onclick="generateReport()">إنشاء التقرير</button>
+        <button onclick="printReport()" class="no-print"><i class="fas fa-print"></i> طباعة التقرير</button>
+        
+        <div id="reportResults" style="margin-top: 20px;"></div>
+    </div>
+</div>
+
+<!-- Modal for Payment Details -->
+<div id="paymentDetailsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('paymentDetailsModal')">&times;</span>
+        <h2>تفاصيل الدفعات</h2>
+        <div id="paymentDetailsContent"></div>
+    </div>
+</div>
+
+<!-- Modal for Card Details -->
+<div id="cardDetailsModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('cardDetailsModal')">&times;</span>
+        <h2>تفاصيل الكروت</h2>
+        <div id="cardDetailsContent"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 // تعريف أنواع الاشتراك
 const subscriptionPlans = {
@@ -377,11 +861,32 @@ const cardPrices = {
     plus: 33000
 };
 
+// تعريف فئات المصاريف
+const expenseCategories = {
+    salary: { name: "رواتب", color: "#c8e6c9", textColor: "#2e7d32" },
+    office: { name: "مكتبية", color: "#bbdefb", textColor: "#1565c0" },
+    marketing: { name: "تسويق", color: "#d1c4e9", textColor: "#4527a0" },
+    maintenance: { name: "صيانة", color: "#ffccbc", textColor: "#e64a19" },
+    other: { name: "أخرى", color: "#e0e0e0", textColor: "#424242" }
+};
+
+// تعريف طرق الدفع
+const paymentMethods = {
+    cash: "نقدي",
+    bank: "تحويل بنكي",
+    card: "بطاقة ائتمان",
+    other: "أخرى"
+};
+
 // البيانات الأساسية
 let customers = JSON.parse(localStorage.getItem('internetCustomers')) || [];
 let agents = JSON.parse(localStorage.getItem('internetAgents')) || [];
+let expenses = JSON.parse(localStorage.getItem('internetExpenses')) || [];
 let currentEditId = null;
 let currentEditAgentId = null;
+let currentEditExpenseId = null;
+let expenseChart = null;
+let revenueExpenseChart = null;
 
 // عند تحميل الصفحة
 window.onload = function() {
@@ -389,11 +894,22 @@ window.onload = function() {
     document.getElementById("subscriptionDate").value = today;
     document.getElementById("paymentDate").value = today;
     document.getElementById("cardDate").value = today;
+    document.getElementById("expenseDate").value = today;
+    document.getElementById("agentPaymentDate").value = today;
+    
+    // تعيين شهر الحالي لتقارير المصاريف
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    document.getElementById("expenseFilterMonth").value = currentMonth;
     
     updateCustomersDropdown();
     updateCustomersTable();
     updateAgentsDropdown();
     updateAgentsTable();
+    updateExpensesTable();
+    updateReports();
+    
+    // تحميل بيانات الوكلاء لقائمة الدفعات
+    updateAgentPaymentDropdown();
 };
 
 // تبديل الألسنة
@@ -407,6 +923,13 @@ function openTab(tabName) {
     
     document.getElementById(tabName).classList.add('active');
     document.querySelector(`.tab[onclick="openTab('${tabName}')"]`).classList.add('active');
+    
+    // عند فتح تبويب التقارير، نقوم بتحديث الرسوم البيانية
+    if (tabName === 'reports') {
+        setTimeout(() => {
+            updateCharts();
+        }, 100);
+    }
 }
 
 // ========== قسم المشتركين ========== //
@@ -418,28 +941,44 @@ function checkSubscriptionType() {
         (subscriptionType === "other") ? "block" : "none";
 }
 
+// عرض/إخفاء حقل العمولة المخصصة
+function checkCommissionType() {
+    const commissionType = document.getElementById("commissionType").value;
+    document.getElementById("customCommissionContainer").style.display = 
+        (commissionType === "custom") ? "block" : "none";
+}
+
 // حفظ/تعديل مشترك
 function saveCustomer() {
     const subscriptionType = document.getElementById("subscriptionType").value;
+    const commissionType = document.getElementById("commissionType").value;
     let plan;
     
     if (subscriptionType === "other") {
         plan = {
             name: "أخرى",
             price: parseInt(document.getElementById("customAmount").value) || 0,
-            commission: parseInt(document.getElementById("customCommission").value) || 0
+            commission: commissionType === "custom" ? 
+                parseInt(document.getElementById("customCommission").value) || 0 : 
+                Math.round(parseInt(document.getElementById("customAmount").value) * 0.2)
         };
     } else {
         plan = subscriptionPlans[subscriptionType];
+        if (commissionType === "custom") {
+            plan.commission = parseInt(document.getElementById("customCommission").value) || 0;
+        }
     }
     
     const customerData = {
         id: currentEditId || Date.now(),
         name: document.getElementById("customerName").value,
+        phone: document.getElementById("customerPhone").value,
+        address: document.getElementById("customerAddress").value,
         subscription: subscriptionType,
         customPlan: subscriptionType === "other" ? plan : null,
         marketer: document.getElementById("marketer").value,
         subscriptionDate: document.getElementById("subscriptionDate").value,
+        notes: document.getElementById("customerNotes").value,
         payments: [],
         paid: false
     };
@@ -461,6 +1000,7 @@ function saveCustomer() {
     cancelEdit();
     updateCustomersDropdown();
     updateCustomersTable();
+    updateReports();
 }
 
 // تسديد دفعة
@@ -468,12 +1008,16 @@ function addPayment() {
     const customerId = parseInt(document.getElementById("paymentCustomer").value);
     const amount = parseInt(document.getElementById("paymentAmount").value);
     const paymentDate = document.getElementById("paymentDate").value;
+    const paymentMethod = document.getElementById("paymentMethod").value;
+    const paymentNotes = document.getElementById("paymentNotes").value;
     
     const customer = customers.find(c => c.id === customerId);
     if (customer) {
         customer.payments.push({
             amount: amount,
-            date: paymentDate
+            date: paymentDate,
+            method: paymentMethod,
+            notes: paymentNotes
         });
         
         const plan = customer.customPlan || subscriptionPlans[customer.subscription];
@@ -483,7 +1027,57 @@ function addPayment() {
         saveData();
         updateCustomersTable();
         document.getElementById("paymentAmount").value = "";
+        document.getElementById("paymentNotes").value = "";
+        updateReports();
     }
+}
+
+// عرض تفاصيل الدفعات
+function showPaymentDetails(customerId) {
+    const customer = customers.find(c => c.id === customerId);
+    if (!customer) return;
+    
+    const plan = customer.customPlan || subscriptionPlans[customer.subscription];
+    const totalPaid = customer.payments.reduce((sum, p) => sum + p.amount, 0);
+    const remaining = plan.price - totalPaid;
+    
+    let content = `
+        <h3>${customer.name}</h3>
+        <p>نوع الاشتراك: <strong>${plan.name} - ${plan.price.toLocaleString()} دينار</strong></p>
+        <p>إجمالي المدفوع: <strong>${totalPaid.toLocaleString()} دينار</strong></p>
+        <p>المتبقي: <strong>${remaining.toLocaleString()} دينار</strong></p>
+        <hr>
+        <h4>سجل الدفعات:</h4>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 8px;">التاريخ</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">المبلغ</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">طريقة الدفع</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">ملاحظات</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    customer.payments.forEach(payment => {
+        content += `
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">${payment.date}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${payment.amount.toLocaleString()}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${paymentMethods[payment.method] || payment.method}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${payment.notes || '-'}</td>
+            </tr>
+        `;
+    });
+    
+    content += `
+            </tbody>
+        </table>
+    `;
+    
+    document.getElementById("paymentDetailsContent").innerHTML = content;
+    document.getElementById("paymentDetailsModal").style.display = "block";
 }
 
 // تعديل مشترك
@@ -494,17 +1088,24 @@ function editCustomer(id) {
     currentEditId = id;
     document.getElementById("editId").value = id;
     document.getElementById("customerName").value = customer.name;
+    document.getElementById("customerPhone").value = customer.phone;
+    document.getElementById("customerAddress").value = customer.address;
     document.getElementById("marketer").value = customer.marketer;
     document.getElementById("subscriptionDate").value = customer.subscriptionDate;
+    document.getElementById("customerNotes").value = customer.notes || "";
     
     if (customer.customPlan) {
         document.getElementById("subscriptionType").value = "other";
         document.getElementById("customAmount").value = customer.customPlan.price;
+        document.getElementById("commissionType").value = "custom";
         document.getElementById("customCommission").value = customer.customPlan.commission;
         document.getElementById("customAmountContainer").style.display = "block";
+        document.getElementById("customCommissionContainer").style.display = "block";
     } else {
         document.getElementById("subscriptionType").value = customer.subscription;
+        document.getElementById("commissionType").value = "default";
         document.getElementById("customAmountContainer").style.display = "none";
+        document.getElementById("customCommissionContainer").style.display = "none";
     }
     
     document.getElementById("cancelBtn").style.display = "block";
@@ -513,11 +1114,12 @@ function editCustomer(id) {
 
 // حذف مشترك
 function deleteCustomer(id) {
-    if (confirm("هل أنت متأكد من حذف هذا المشترك؟")) {
+    if (confirm("هل أنت متأكد من حذف هذا المشترك؟ سيتم حذف جميع بياناته بما في ذلك سجل الدفعات.")) {
         customers = customers.filter(c => c.id !== id);
         saveData();
         updateCustomersDropdown();
         updateCustomersTable();
+        updateReports();
     }
 }
 
@@ -526,12 +1128,17 @@ function cancelEdit() {
     currentEditId = null;
     document.getElementById("editId").value = "";
     document.getElementById("customerName").value = "";
+    document.getElementById("customerPhone").value = "";
+    document.getElementById("customerAddress").value = "";
     document.getElementById("marketer").value = "";
     document.getElementById("customAmount").value = "";
-    document.getElementById("customCommission").value = "0";
+    document.getElementById("customCommission").value = "";
     document.getElementById("subscriptionType").selectedIndex = 0;
+    document.getElementById("commissionType").selectedIndex = 0;
     document.getElementById("subscriptionDate").value = new Date().toISOString().split('T')[0];
+    document.getElementById("customerNotes").value = "";
     document.getElementById("customAmountContainer").style.display = "none";
+    document.getElementById("customCommissionContainer").style.display = "none";
     document.getElementById("cancelBtn").style.display = "none";
 }
 
@@ -540,7 +1147,7 @@ function updateCustomersDropdown() {
     const dropdown = document.getElementById("paymentCustomer");
     dropdown.innerHTML = customers.map(c => {
         const plan = c.customPlan || subscriptionPlans[c.subscription];
-        return `<option value="${c.id}">${c.name} - ${plan.name} (${plan.price} دينار)</option>`;
+        return `<option value="${c.id}">${c.name} - ${plan.name} (${plan.price.toLocaleString()} دينار)</option>`;
     }).join("");
 }
 
@@ -552,24 +1159,26 @@ function updateCustomersTable() {
         const totalPaid = customer.payments.reduce((sum, p) => sum + p.amount, 0);
         const remaining = plan.price - totalPaid;
         const status = customer.paid ? 
-            `<span style="color: green;">مسدد</span>` : 
-            `دفع: ${totalPaid} - بقي: <span style="color: red;">${remaining}</span>`;
+            `<span class="status-badge paid-badge">مسدد</span>` : 
+            `<span class="status-badge unpaid-badge">دفع: ${totalPaid.toLocaleString()} - بقي: ${remaining.toLocaleString()}</span>`;
         
         return `
         <tr class="${customer.paid ? 'paid' : 'unpaid'}">
             <td>${customer.name}</td>
+            <td>${customer.phone || '-'}</td>
             <td><span class="subscription-badge ${customer.subscription === 'other' ? 'other' : customer.subscription}">
                 ${plan.name}${customer.customPlan ? '*' : ''}
             </span></td>
             <td>${plan.price.toLocaleString()}</td>
             <td>${customer.subscriptionDate}</td>
             <td>${status}</td>
-            <td>${customer.marketer}</td>
+            <td>${customer.marketer || '-'}</td>
             <td>${customer.paid ? plan.commission.toLocaleString() : '0'}</td>
-            <td>
+            <td class="no-print">
                 <div class="action-buttons">
                     <button class="edit" onclick="editCustomer(${customer.id})">تعديل</button>
                     <button class="delete" onclick="deleteCustomer(${customer.id})">حذف</button>
+                    <button class="secondary" onclick="showPaymentDetails(${customer.id})">الدفعات</button>
                 </div>
             </td>
         </tr>`;
@@ -608,6 +1217,25 @@ function updateCustomersTable() {
     document.getElementById("paymentPercentage").textContent = paymentPercentage + "%";
     document.getElementById("commissionPercentage").textContent = commissionPercentage + "%";
     document.getElementById("avgCommission").textContent = avgCommission.toLocaleString();
+    
+    // تحديث شريط التقدم
+    document.getElementById("paymentProgress").style.width = `${paymentPercentage}%`;
+}
+
+// البحث عن المشتركين
+function searchCustomers() {
+    const searchTerm = document.getElementById("customerSearch").value.toLowerCase();
+    const rows = document.querySelectorAll("#customersTable tbody tr");
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? "" : "none";
+    });
+}
+
+// طباعة قائمة المشتركين
+function printCustomers() {
+    window.print();
 }
 
 // ========== قسم الوكلاء ========== //
@@ -619,6 +1247,7 @@ function saveAgent() {
         name: document.getElementById("agentName").value,
         phone: document.getElementById("agentPhone").value,
         address: document.getElementById("agentAddress").value,
+        notes: document.getElementById("agentNotes").value,
         cards: [],
         payments: []
     };
@@ -640,6 +1269,8 @@ function saveAgent() {
     cancelAgentEdit();
     updateAgentsDropdown();
     updateAgentsTable();
+    updateAgentPaymentDropdown();
+    updateReports();
 }
 
 // سحب كروت
@@ -648,6 +1279,7 @@ function addCards() {
     const count = parseInt(document.getElementById("cardsCount").value);
     const type = document.getElementById("cardType").value;
     const date = document.getElementById("cardDate").value;
+    const notes = document.getElementById("cardNotes").value;
     
     const agent = agents.find(a => a.id === agentId);
     if (agent) {
@@ -659,13 +1291,123 @@ function addCards() {
             count: count,
             price: price,
             total: total,
-            date: date
+            date: date,
+            notes: notes
         });
         
         saveData();
         updateAgentsTable();
         document.getElementById("cardsCount").value = 1;
+        document.getElementById("cardNotes").value = "";
+        updateReports();
     }
+}
+
+// تسديد دفعة وكيل
+function addAgentPayment() {
+    const agentId = parseInt(document.getElementById("agentPaymentSelect").value);
+    const amount = parseInt(document.getElementById("agentPaymentAmount").value);
+    const paymentDate = document.getElementById("agentPaymentDate").value;
+    const paymentMethod = document.getElementById("agentPaymentMethod").value;
+    const paymentNotes = document.getElementById("agentPaymentNotes").value;
+    
+    const agent = agents.find(a => a.id === agentId);
+    if (agent) {
+        agent.payments.push({
+            amount: amount,
+            date: paymentDate,
+            method: paymentMethod,
+            notes: paymentNotes
+        });
+        
+        saveData();
+        updateAgentsTable();
+        document.getElementById("agentPaymentAmount").value = "";
+        document.getElementById("agentPaymentNotes").value = "";
+        updateReports();
+    }
+}
+
+// عرض تفاصيل الكروت
+function showCardDetails(agentId) {
+    const agent = agents.find(a => a.id === agentId);
+    if (!agent) return;
+    
+    const totalCards = agent.cards.reduce((sum, c) => sum + c.count, 0);
+    const totalDue = agent.cards.reduce((sum, c) => sum + c.total, 0);
+    const totalPaid = agent.payments.reduce((sum, p) => sum + p.amount, 0);
+    const remaining = totalDue - totalPaid;
+    
+    let content = `
+        <h3>${agent.name}</h3>
+        <p>إجمالي الكروت: <strong>${totalCards}</strong></p>
+        <p>إجمالي المبلغ: <strong>${totalDue.toLocaleString()} دينار</strong></p>
+        <p>المسدد: <strong>${totalPaid.toLocaleString()} دينار</strong></p>
+        <p>المتبقي: <strong>${remaining.toLocaleString()} دينار</strong></p>
+        <hr>
+        <h4>سجل سحب الكروت:</h4>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 8px;">التاريخ</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">النوع</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">العدد</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">السعر</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">الإجمالي</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">ملاحظات</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    agent.cards.forEach(card => {
+        content += `
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">${card.date}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${subscriptionPlans[card.type].name}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${card.count}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${card.price.toLocaleString()}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${card.total.toLocaleString()}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${card.notes || '-'}</td>
+            </tr>
+        `;
+    });
+    
+    content += `
+            </tbody>
+        </table>
+        <hr>
+        <h4>سجل الدفعات:</h4>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #ddd; padding: 8px;">التاريخ</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">المبلغ</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">طريقة الدفع</th>
+                    <th style="border: 1px solid #ddd; padding: 8px;">ملاحظات</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    agent.payments.forEach(payment => {
+        content += `
+            <tr>
+                <td style="border: 1px solid #ddd; padding: 8px;">${payment.date}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${payment.amount.toLocaleString()}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${paymentMethods[payment.method] || payment.method}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${payment.notes || '-'}</td>
+            </tr>
+        `;
+    });
+    
+    content += `
+            </tbody>
+        </table>
+    `;
+    
+    document.getElementById("cardDetailsContent").innerHTML = content;
+    document.getElementById("cardDetailsModal").style.display = "block";
 }
 
 // تعديل وكيل
@@ -678,6 +1420,7 @@ function editAgent(id) {
     document.getElementById("agentName").value = agent.name;
     document.getElementById("agentPhone").value = agent.phone;
     document.getElementById("agentAddress").value = agent.address;
+    document.getElementById("agentNotes").value = agent.notes || "";
     
     document.getElementById("cancelAgentBtn").style.display = "block";
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -685,11 +1428,13 @@ function editAgent(id) {
 
 // حذف وكيل
 function deleteAgent(id) {
-    if (confirm("هل أنت متأكد من حذف هذا الوكيل؟")) {
+    if (confirm("هل أنت متأكد من حذف هذا الوكيل؟ سيتم حذف جميع بياناته بما في ذلك سجل الكروت والدفعات.")) {
         agents = agents.filter(a => a.id !== id);
         saveData();
         updateAgentsDropdown();
         updateAgentsTable();
+        updateAgentPaymentDropdown();
+        updateReports();
     }
 }
 
@@ -700,12 +1445,21 @@ function cancelAgentEdit() {
     document.getElementById("agentName").value = "";
     document.getElementById("agentPhone").value = "";
     document.getElementById("agentAddress").value = "";
+    document.getElementById("agentNotes").value = "";
     document.getElementById("cancelAgentBtn").style.display = "none";
 }
 
 // تحديث القائمة المنسدلة للوكلاء
 function updateAgentsDropdown() {
     const dropdown = document.getElementById("cardAgent");
+    dropdown.innerHTML = agents.map(a => 
+        `<option value="${a.id}">${a.name}</option>`
+    ).join("");
+}
+
+// تحديث القائمة المنسدلة لدفعات الوكلاء
+function updateAgentPaymentDropdown() {
+    const dropdown = document.getElementById("agentPaymentSelect");
     dropdown.innerHTML = agents.map(a => 
         `<option value="${a.id}">${a.name}</option>`
     ).join("");
@@ -723,16 +1477,17 @@ function updateAgentsTable() {
         return `
         <tr class="agent">
             <td>${agent.name}</td>
-            <td>${agent.phone}</td>
-            <td>${agent.address}</td>
+            <td>${agent.phone || '-'}</td>
+            <td>${agent.address || '-'}</td>
             <td>${totalCards}</td>
             <td>${totalDue.toLocaleString()}</td>
             <td>${totalPaid.toLocaleString()}</td>
             <td>${remaining.toLocaleString()}</td>
-            <td>
+            <td class="no-print">
                 <div class="action-buttons">
                     <button class="edit" onclick="editAgent(${agent.id})">تعديل</button>
                     <button class="delete" onclick="deleteAgent(${agent.id})">حذف</button>
+                    <button class="secondary" onclick="showCardDetails(${agent.id})">التفاصيل</button>
                 </div>
             </td>
         </tr>`;
@@ -746,19 +1501,642 @@ function updateAgentsTable() {
         sum + a.cards.reduce((s, c) => s + c.total, 0), 0);
     const totalAgentsPaid = agents.reduce((sum, a) => 
         sum + a.payments.reduce((s, p) => s + p.amount, 0), 0);
+    const totalAgentsRemaining = totalAgentsDue - totalAgentsPaid;
+    const paymentPercentage = totalAgentsDue > 0 ? Math.round((totalAgentsPaid / totalAgentsDue) * 100) : 0;
+    
+    // إحصائيات أنواع الكروت
+    const nb1Cards = agents.reduce((sum, a) => 
+        sum + a.cards.filter(c => c.type === 'nb1').reduce((s, c) => s + c.count, 0), 0);
+    const maxCards = agents.reduce((sum, a) => 
+        sum + a.cards.filter(c => c.type === 'max').reduce((s, c) => s + c.count, 0), 0);
+    const standardCards = agents.reduce((sum, a) => 
+        sum + a.cards.filter(c => c.type === 'standard').reduce((s, c) => s + c.count, 0), 0);
+    const plusCards = agents.reduce((sum, a) => 
+        sum + a.cards.filter(c => c.type === 'plus').reduce((s, c) => s + c.count, 0), 0);
     
     document.getElementById("totalAgents").textContent = totalAgents;
     document.getElementById("totalCards").textContent = totalCards;
     document.getElementById("totalAgentsDue").textContent = totalAgentsDue.toLocaleString();
     document.getElementById("totalAgentsPaid").textContent = totalAgentsPaid.toLocaleString();
-    document.getElementById("totalAgentsRemaining").textContent = 
-        (totalAgentsDue - totalAgentsPaid).toLocaleString();
+    document.getElementById("totalAgentsRemaining").textContent = totalAgentsRemaining.toLocaleString();
+    document.getElementById("nb1Cards").textContent = nb1Cards;
+    document.getElementById("maxCards").textContent = maxCards;
+    document.getElementById("standardCards").textContent = standardCards;
+    document.getElementById("plusCards").textContent = plusCards;
+    
+    // تحديث شريط التقدم
+    document.getElementById("agentPaymentProgress").style.width = `${paymentPercentage}%`;
 }
+
+// البحث عن الوكلاء
+function searchAgents() {
+    const searchTerm = document.getElementById("agentSearch").value.toLowerCase();
+    const rows = document.querySelectorAll("#agentsTable tbody tr");
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? "" : "none";
+    });
+}
+
+// طباعة قائمة الوكلاء
+function printAgents() {
+    window.print();
+}
+
+// ========== قسم المصاريف ========== //
+
+// حفظ/تعديل مصروف
+function saveExpense() {
+    const expenseData = {
+        id: currentEditExpenseId || Date.now(),
+        description: document.getElementById("expenseDescription").value,
+        amount: parseInt(document.getElementById("expenseAmount").value) || 0,
+        category: document.getElementById("expenseCategory").value,
+        paymentMethod: document.getElementById("expensePaymentMethod").value,
+        date: document.getElementById("expenseDate").value,
+        notes: document.getElementById("expenseNotes").value
+    };
+    
+    if (currentEditExpenseId) {
+        // تحديث المصروف الموجود
+        const index = expenses.findIndex(e => e.id === currentEditExpenseId);
+        if (index !== -1) {
+            expenses[index] = expenseData;
+        }
+    } else {
+        // إضافة مصروف جديد
+        expenses.push(expenseData);
+    }
+    
+    saveData();
+    cancelExpenseEdit();
+    updateExpensesTable();
+    updateReports();
+}
+
+// تعديل مصروف
+function editExpense(id) {
+    const expense = expenses.find(e => e.id === id);
+    if (!expense) return;
+    
+    currentEditExpenseId = id;
+    document.getElementById("editExpenseId").value = id;
+    document.getElementById("expenseDescription").value = expense.description;
+    document.getElementById("expenseAmount").value = expense.amount;
+    document.getElementById("expenseCategory").value = expense.category;
+    document.getElementById("expensePaymentMethod").value = expense.paymentMethod;
+    document.getElementById("expenseDate").value = expense.date;
+    document.getElementById("expenseNotes").value = expense.notes || "";
+    
+    document.getElementById("cancelExpenseBtn").style.display = "block";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// حذف مصروف
+function deleteExpense(id) {
+    if (confirm("هل أنت متأكد من حذف هذا المصروف؟")) {
+        expenses = expenses.filter(e => e.id !== id);
+        saveData();
+        updateExpensesTable();
+        updateReports();
+    }
+}
+
+// إلغاء تعديل المصروف
+function cancelExpenseEdit() {
+    currentEditExpenseId = null;
+    document.getElementById("editExpenseId").value = "";
+    document.getElementById("expenseDescription").value = "";
+    document.getElementById("expenseAmount").value = "";
+    document.getElementById("expenseCategory").selectedIndex = 0;
+    document.getElementById("expensePaymentMethod").selectedIndex = 0;
+    document.getElementById("expenseDate").value = new Date().toISOString().split('T')[0];
+    document.getElementById("expenseNotes").value = "";
+    document.getElementById("cancelExpenseBtn").style.display = "none";
+}
+
+// تحديث جدول المصاريف
+function updateExpensesTable() {
+    const tableBody = document.querySelector("#expensesTable tbody");
+    tableBody.innerHTML = expenses.map(expense => {
+        const category = expenseCategories[expense.category];
+        return `
+        <tr class="expense">
+            <td>${expense.date}</td>
+            <td>${expense.description}</td>
+            <td>${expense.amount.toLocaleString()}</td>
+            <td><span class="category-badge ${expense.category}" 
+                style="background-color: ${category.color}; color: ${category.textColor}">
+                ${category.name}
+            </span></td>
+            <td>${paymentMethods[expense.paymentMethod] || expense.paymentMethod}</td>
+            <td>${expense.notes || '-'}</td>
+            <td class="no-print">
+                <div class="action-buttons">
+                    <button class="edit" onclick="editExpense(${expense.id})">تعديل</button>
+                    <button class="delete" onclick="deleteExpense(${expense.id})">حذف</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join("");
+    
+    // حساب إجماليات المصاريف
+    const today = new Date().toISOString().split('T')[0];
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const currentYear = new Date().getFullYear().toString();
+    
+    const todayExpenses = expenses
+        .filter(e => e.date === today)
+        .reduce((sum, e) => sum + e.amount, 0);
+    
+    const monthExpenses = expenses
+        .filter(e => e.date.startsWith(currentMonth))
+        .reduce((sum, e) => sum + e.amount, 0);
+    
+    const yearExpenses = expenses
+        .filter(e => e.date.startsWith(currentYear))
+        .reduce((sum, e) => sum + e.amount, 0);
+    
+    const totalExpenses = expenses
+        .reduce((sum, e) => sum + e.amount, 0);
+    
+    // حسب الفئة
+    const salaryExpenses = expenses
+        .filter(e => e.category === 'salary')
+        .reduce((sum, e) => sum + e.amount, 0);
+    
+    const officeExpenses = expenses
+        .filter(e => e.category === 'office')
+        .reduce((sum, e) => sum + e.amount, 0);
+    
+    const marketingExpenses = expenses
+        .filter(e => e.category === 'marketing')
+        .reduce((sum, e) => sum + e.amount, 0);
+    
+    const maintenanceExpenses = expenses
+        .filter(e => e.category === 'maintenance')
+        .reduce((sum, e) => sum + e.amount, 0);
+    
+    const otherExpenses = expenses
+        .filter(e => e.category === 'other')
+        .reduce((sum, e) => sum + e.amount, 0);
+    
+    // حسب طريقة الدفع
+    const cashExpenses = expenses
+        .filter(e => e.paymentMethod === 'cash')
+        .reduce((sum, e) => sum + e.amount, 0);
+    
+    const bankExpenses = expenses
+        .filter(e => e.paymentMethod === 'bank')
+        .reduce((sum, e) => sum + e.amount, 0);
+    
+    const cardExpenses = expenses
+        .filter(e => e.paymentMethod === 'card')
+        .reduce((sum, e) => sum + e.amount, 0);
+    
+    document.getElementById("todayExpenses").textContent = todayExpenses.toLocaleString();
+    document.getElementById("monthExpenses").textContent = monthExpenses.toLocaleString();
+    document.getElementById("yearExpenses").textContent = yearExpenses.toLocaleString();
+    document.getElementById("totalExpenses").textContent = totalExpenses.toLocaleString();
+    
+    document.getElementById("salaryExpenses").textContent = salaryExpenses.toLocaleString();
+    document.getElementById("officeExpenses").textContent = officeExpenses.toLocaleString();
+    document.getElementById("marketingExpenses").textContent = marketingExpenses.toLocaleString();
+    document.getElementById("maintenanceExpenses").textContent = maintenanceExpenses.toLocaleString();
+    document.getElementById("otherExpenses").textContent = otherExpenses.toLocaleString();
+    
+    document.getElementById("cashExpenses").textContent = cashExpenses.toLocaleString();
+    document.getElementById("bankExpenses").textContent = bankExpenses.toLocaleString();
+    document.getElementById("cardExpenses").textContent = cardExpenses.toLocaleString();
+}
+
+// البحث عن المصاريف
+function searchExpenses() {
+    const searchTerm = document.getElementById("expenseSearch").value.toLowerCase();
+    const rows = document.querySelectorAll("#expensesTable tbody tr");
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? "" : "none";
+    });
+}
+
+// تصفية المصاريف حسب الفئة والتاريخ
+function filterExpenses() {
+    const category = document.getElementById("expenseFilterCategory").value;
+    const month = document.getElementById("expenseFilterMonth").value;
+    const rows = document.querySelectorAll("#expensesTable tbody tr");
+    
+    rows.forEach(row => {
+        const rowCategory = row.querySelector("td:nth-child(4) span").textContent;
+        const rowDate = row.querySelector("td:nth-child(1)").textContent;
+        
+        const categoryMatch = category === 'all' || rowCategory === expenseCategories[category].name;
+        const monthMatch = month === '' || rowDate.startsWith(month);
+        
+        row.style.display = (categoryMatch && monthMatch) ? "" : "none";
+    });
+}
+
+// طباعة قائمة المصاريف
+function printExpenses() {
+    window.print();
+}
+
+// ========== قسم التقارير ========== //
+
+// تحديث التقارير
+function updateReports() {
+    // إيرادات المشتركين
+    const customerRevenue = customers.reduce((sum, c) => {
+        const plan = c.customPlan || subscriptionPlans[c.subscription];
+        return sum + plan.price;
+    }, 0);
+    
+    // إيرادات الوكلاء
+    const agentRevenue = agents.reduce((sum, a) => 
+        sum + a.cards.reduce((s, c) => s + c.total, 0), 0);
+    
+    // إجمالي الإيرادات
+    const totalRevenue = customerRevenue + agentRevenue;
+    
+    // إجمالي المصاريف
+    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+    
+    // متوسط المصاريف الشهرية
+    const monthlyExpenses = calculateMonthlyAverage(expenses);
+    
+    // أعلى فئة مصاريف
+    const topCategory = findTopExpenseCategory();
+    
+    // صافي الربح
+    const netProfit = totalRevenue - totalExpenses;
+    
+    // هامش الربح
+    const profitMargin = totalRevenue > 0 ? Math.round((netProfit / totalRevenue) * 100) : 0;
+    
+    // نسبة المصاريف للإيرادات
+    const expenseRatio = totalRevenue > 0 ? Math.round((totalExpenses / totalRevenue) * 100) : 0;
+    
+    document.getElementById("reportCustomerRevenue").textContent = customerRevenue.toLocaleString();
+    document.getElementById("reportAgentRevenue").textContent = agentRevenue.toLocaleString();
+    document.getElementById("reportTotalRevenue").textContent = totalRevenue.toLocaleString();
+    document.getElementById("reportTotalExpenses").textContent = totalExpenses.toLocaleString();
+    document.getElementById("reportAvgMonthlyExpenses").textContent = monthlyExpenses.toLocaleString();
+    document.getElementById("reportTopExpenseCategory").textContent = topCategory;
+    document.getElementById("reportNetProfit").textContent = netProfit.toLocaleString();
+    document.getElementById("reportProfitMargin").textContent = profitMargin + "%";
+    document.getElementById("reportExpenseRatio").textContent = expenseRatio + "%";
+    
+    // تحديث الرسوم البيانية
+    updateCharts();
+}
+
+// حساب متوسط المصاريف الشهرية
+function calculateMonthlyAverage(expenses) {
+    if (expenses.length === 0) return 0;
+    
+    const firstDate = new Date(expenses.reduce((min, e) => 
+        e.date < min ? e.date : min, expenses[0].date));
+    const lastDate = new Date(expenses.reduce((max, e) => 
+        e.date > max ? e.date : max, expenses[0].date));
+    
+    const months = (lastDate.getFullYear() - firstDate.getFullYear()) * 12 + 
+        (lastDate.getMonth() - firstDate.getMonth()) + 1;
+    
+    const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+    return Math.round(total / Math.max(months, 1));
+}
+
+// العثور على أعلى فئة مصاريف
+function findTopExpenseCategory() {
+    if (expenses.length === 0) return '-';
+    
+    const categories = {};
+    expenses.forEach(e => {
+        categories[e.category] = (categories[e.category] || 0) + e.amount;
+    });
+    
+    let topCategory = '';
+    let maxAmount = 0;
+    
+    for (const category in categories) {
+        if (categories[category] > maxAmount) {
+            maxAmount = categories[category];
+            topCategory = expenseCategories[category].name;
+        }
+    }
+    
+    return topCategory;
+}
+
+// تحديث الرسوم البيانية
+function updateCharts() {
+    // تحليل المصاريف حسب الفئة
+    const expenseByCategory = {};
+    expenses.forEach(e => {
+        expenseByCategory[e.category] = (expenseByCategory[e.category] || 0) + e.amount;
+    });
+    
+    const categoryLabels = [];
+    const categoryData = [];
+    const categoryColors = [];
+    const categoryTextColors = [];
+    
+    for (const category in expenseCategories) {
+        categoryLabels.push(expenseCategories[category].name);
+        categoryData.push(expenseByCategory[category] || 0);
+        categoryColors.push(expenseCategories[category].color);
+        categoryTextColors.push(expenseCategories[category].textColor);
+    }
+    
+    const expenseCtx = document.getElementById('expenseChart').getContext('2d');
+    
+    if (expenseChart) {
+        expenseChart.destroy();
+    }
+    
+    expenseChart = new Chart(expenseCtx, {
+        type: 'pie',
+        data: {
+            labels: categoryLabels,
+            datasets: [{
+                data: categoryData,
+                backgroundColor: categoryColors,
+                borderColor: '#fff',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value.toLocaleString()} دينار (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // تحليل الإيرادات والمصاريف الشهرية
+    const monthlyData = {};
+    const currentYear = new Date().getFullYear();
+    
+    // جمع الإيرادات الشهرية (المشتركين)
+    customers.forEach(c => {
+        const date = new Date(c.subscriptionDate);
+        if (date.getFullYear() === currentYear) {
+            const month = date.getMonth();
+            const plan = c.customPlan || subscriptionPlans[c.subscription];
+            monthlyData[month] = monthlyData[month] || { revenue: 0, expense: 0 };
+            monthlyData[month].revenue += plan.price;
+        }
+    });
+    
+    // جمع الإيرادات الشهرية (الوكلاء)
+    agents.forEach(a => {
+        a.cards.forEach(c => {
+            const date = new Date(c.date);
+            if (date.getFullYear() === currentYear) {
+                const month = date.getMonth();
+                monthlyData[month] = monthlyData[month] || { revenue: 0, expense: 0 };
+                monthlyData[month].revenue += c.total;
+            }
+        });
+    });
+    
+    // جمع المصاريف الشهرية
+    expenses.forEach(e => {
+        const date = new Date(e.date);
+        if (date.getFullYear() === currentYear) {
+            const month = date.getMonth();
+            monthlyData[month] = monthlyData[month] || { revenue: 0, expense: 0 };
+            monthlyData[month].expense += e.amount;
+        }
+    });
+    
+    const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 
+                   'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    const revenueData = [];
+    const expenseData = [];
+    
+    for (let i = 0; i < 12; i++) {
+        revenueData.push(monthlyData[i]?.revenue || 0);
+        expenseData.push(monthlyData[i]?.expense || 0);
+    }
+    
+    const revenueExpenseCtx = document.getElementById('revenueExpenseChart').getContext('2d');
+    
+    if (revenueExpenseChart) {
+        revenueExpenseChart.destroy();
+    }
+    
+    revenueExpenseChart = new Chart(revenueExpenseCtx, {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [
+                {
+                    label: 'الإيرادات',
+                    data: revenueData,
+                    backgroundColor: '#4285f4',
+                    borderColor: '#3367d6',
+                    borderWidth: 1
+                },
+                {
+                    label: 'المصاريف',
+                    data: expenseData,
+                    backgroundColor: '#f44336',
+                    borderColor: '#d32f2f',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    stacked: false,
+                },
+                y: {
+                    stacked: false,
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.dataset.label || '';
+                            const value = context.raw || 0;
+                            return `${label}: ${value.toLocaleString()} دينار`;
+                        }
+                    }
+                },
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 20
+                    }
+                }
+            }
+        }
+    });
+}
+
+// إنشاء تقرير مخصص
+function generateReport() {
+    const reportType = document.getElementById("reportType").value;
+    const category = document.getElementById("reportCategory").value;
+    let fromDate, toDate;
+    
+    if (reportType === 'custom') {
+        fromDate = document.getElementById("reportFromDate").value;
+        toDate = document.getElementById("reportToDate").value;
+        
+        if (!fromDate || !toDate) {
+            alert("الرجاء تحديد تاريخ البداية والنهاية للتقرير المخصص");
+            return;
+        }
+    } else {
+        const today = new Date();
+        if (reportType === 'monthly') {
+            fromDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+            toDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+        } else { // yearly
+            fromDate = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
+            toDate = new Date(today.getFullYear(), 11, 31).toISOString().split('T')[0];
+        }
+    }
+    
+    let reportContent = `
+        <div class="form-container print-area">
+            <h3>تقرير مخصص</h3>
+            <p>الفترة من ${fromDate} إلى ${toDate}</p>
+    `;
+    
+    // تقرير المشتركين إذا تم اختيار الكل أو المشتركين فقط
+    if (category === 'all' || category === 'customers') {
+        const filteredCustomers = customers.filter(c => 
+            c.subscriptionDate >= fromDate && c.subscriptionDate <= toDate);
+        
+        const customerRevenue = filteredCustomers.reduce((sum, c) => {
+            const plan = c.customPlan || subscriptionPlans[c.subscription];
+            return sum + plan.price;
+        }, 0);
+        
+        const customerPaid = filteredCustomers.reduce((sum, c) => 
+            sum + c.payments.reduce((s, p) => s + p.amount, 0), 0);
+        
+        reportContent += `
+            <h4>تقرير المشتركين</h4>
+            <p>عدد المشتركين الجدد: <strong>${filteredCustomers.length}</strong></p>
+            <p>إجمالي قيمة الاشتراكات: <strong>${customerRevenue.toLocaleString()} دينار</strong></p>
+            <p>إجمالي المدفوع: <strong>${customerPaid.toLocaleString()} دينار</strong></p>
+            <p>نسبة السداد: <strong>${customerRevenue > 0 ? Math.round((customerPaid / customerRevenue) * 100) : 0}%</strong></p>
+        `;
+    }
+    
+    // تقرير الوكلاء إذا تم اختيار الكل أو الوكلاء فقط
+    if (category === 'all' || category === 'agents') {
+        const filteredAgents = agents.filter(a => 
+            a.cards.some(c => c.date >= fromDate && c.date <= toDate));
+        
+        const agentCards = filteredAgents.reduce((sum, a) => 
+            sum + a.cards.filter(c => c.date >= fromDate && c.date <= toDate).reduce((s, c) => s + c.count, 0), 0);
+        
+        const agentRevenue = filteredAgents.reduce((sum, a) => 
+            sum + a.cards.filter(c => c.date >= fromDate && c.date <= toDate).reduce((s, c) => s + c.total, 0), 0);
+        
+        const agentPaid = filteredAgents.reduce((sum, a) => 
+            sum + a.payments.filter(p => p.date >= fromDate && p.date <= toDate).reduce((s, p) => s + p.amount, 0), 0);
+        
+        reportContent += `
+            <h4>تقرير الوكلاء</h4>
+            <p>عدد الوكلاء النشطين: <strong>${filteredAgents.length}</strong></p>
+            <p>إجمالي الكروت المسحوبة: <strong>${agentCards}</strong></p>
+            <p>إجمالي قيمة الكروت: <strong>${agentRevenue.toLocaleString()} دينار</strong></p>
+            <p>إجمالي المدفوع: <strong>${agentPaid.toLocaleString()} دينار</strong></p>
+            <p>نسبة السداد: <strong>${agentRevenue > 0 ? Math.round((agentPaid / agentRevenue) * 100) : 0}%</strong></p>
+        `;
+    }
+    
+    // تقرير المصاريف إذا تم اختيار الكل أو المصاريف فقط
+    if (category === 'all' || category === 'expenses') {
+        const filteredExpenses = expenses.filter(e => 
+            e.date >= fromDate && e.date <= toDate);
+        
+        const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+        
+        // حسب الفئة
+        const expenseByCategory = {};
+        filteredExpenses.forEach(e => {
+            expenseByCategory[e.category] = (expenseByCategory[e.category] || 0) + e.amount;
+        });
+        
+        let categoryReport = '<h4>تقرير المصاريف حسب الفئة</h4><ul>';
+        for (const category in expenseByCategory) {
+            categoryReport += `<li>${expenseCategories[category].name}: <strong>${expenseByCategory[category].toLocaleString()} دينار</strong></li>`;
+        }
+        categoryReport += '</ul>';
+        
+        reportContent += `
+            <h4>تقرير المصاريف</h4>
+            <p>إجمالي المصاريف: <strong>${totalExpenses.toLocaleString()} دينار</strong></p>
+            ${categoryReport}
+        `;
+    }
+    
+    reportContent += `</div>`;
+    document.getElementById("reportResults").innerHTML = reportContent;
+}
+
+// طباعة التقرير
+function printReport() {
+    window.print();
+}
+
+// إظهار/إخفاء نطاق التاريخ للتقرير المخصص
+document.getElementById("reportType").addEventListener('change', function() {
+    document.getElementById("customReportRange").style.display = 
+        this.value === 'custom' ? 'block' : 'none';
+});
+
+// ========== وظائف عامة ========== //
 
 // حفظ البيانات
 function saveData() {
     localStorage.setItem('internetCustomers', JSON.stringify(customers));
     localStorage.setItem('internetAgents', JSON.stringify(agents));
+    localStorage.setItem('internetExpenses', JSON.stringify(expenses));
+}
+
+// إغلاق النافذة المنبثقة
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = "none";
+}
+
+// إغلاق النوافذ المنبثقة عند النقر خارجها
+window.onclick = function(event) {
+    if (event.target.className === 'modal') {
+        event.target.style.display = "none";
+    }
 }
 </script>
 
