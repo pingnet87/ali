@@ -464,7 +464,7 @@
                     <th>هاتف</th>
                     <th>نوع الاشتراك</th>
                     <th>المبلغ</th>
-                    <th>تاريخ الاشتراك</th>
+                    <th>تاريخ الاشترак</th>
                     <th>الحالة</th>
                     <th>المسوق</th>
                     <th>عمولة</th>
@@ -536,7 +536,7 @@
             <h2>سحب كروت</h2>
             <div class="form-group">
                 <label>اختر الوكيل:</label>
-                <select id="cardAgent"></select>
+                <select id="cardAgent" onchange="updateCardPrices()"></select>
             </div>
             <div class="form-group">
                 <label>عدد الكروت:</label>
@@ -544,12 +544,20 @@
             </div>
             <div class="form-group">
                 <label>نوع الكارت:</label>
-                <select id="cardType">
+                <select id="cardType" onchange="updateCardPriceDisplay()">
                     <option value="nb1">NB1</option>
                     <option value="max">ماكس</option>
                     <option value="standard">ستاندرد</option>
                     <option value="plus">بلص</option>
                 </select>
+            </div>
+            <div class="form-group">
+                <label>سعر الكارت للوكيل:</label>
+                <input type="number" id="cardPrice" placeholder="سعر الكارت">
+            </div>
+            <div class="form-group">
+                <label>الإجمالي:</label>
+                <input type="text" id="cardTotal" readonly>
             </div>
             <div class="form-group">
                 <label>تاريخ السحب:</label>
@@ -816,7 +824,7 @@
                 <option value="agents">الوكلاء فقط</option>
                 <option value="expenses">المصاريف فقط</option>
             </select>
-        </div>
+            </div>
         <button onclick="generateReport()">إنشاء التقرير</button>
         <button onclick="printReport()" class="no-print"><i class="fas fa-print"></i> طباعة التقرير</button>
         
@@ -844,18 +852,18 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// تعريف أنواع الاشتراك
+// تعريف أنواع الاشتراك - تم تعديل عمولة ماكس من 6000 إلى 5000
 const subscriptionPlans = {
     nb1: { name: "NB1", price: 25000, commission: 5000 },
-    max: { name: "ماكس", price: 30000, commission: 6000 },
+    max: { name: "ماكس", price: 30000, commission: 5000 }, // تم التعديل هنا من 6000 إلى 5000
     standard: { name: "ستاندرد", price: 50000, commission: 10000 },
     plus: { name: "بلص", price: 35000, commission: 7000 },
     other: { name: "أخرى", price: 0, commission: 0 }
 };
 
-// تعريف أسعار الكروت للوكلاء
-const cardPrices = {
-    nb1: 23000,  // سعر الكارت للوكيل
+// تعريف أسعار الكروت الافتراضية للوكلاء (سيتم تخصيصها لكل وكيل)
+const defaultCardPrices = {
+    nb1: 23000,
     max: 28000,
     standard: 48000,
     plus: 33000
@@ -910,6 +918,10 @@ window.onload = function() {
     
     // تحميل بيانات الوكلاء لقائمة الدفعات
     updateAgentPaymentDropdown();
+    
+    // إضافة معالج حدث لحساب الإجمالي تلقائياً
+    document.getElementById("cardsCount").addEventListener('input', calculateCardTotal);
+    document.getElementById("cardPrice").addEventListener('input', calculateCardTotal);
 };
 
 // تبديل الألسنة
@@ -1248,6 +1260,12 @@ function saveAgent() {
         phone: document.getElementById("agentPhone").value,
         address: document.getElementById("agentAddress").value,
         notes: document.getElementById("agentNotes").value,
+        cardPrices: {
+            nb1: document.getElementById("nb1Price") ? parseInt(document.getElementById("nb1Price").value) || defaultCardPrices.nb1 : defaultCardPrices.nb1,
+            max: document.getElementById("maxPrice") ? parseInt(document.getElementById("maxPrice").value) || defaultCardPrices.max : defaultCardPrices.max,
+            standard: document.getElementById("standardPrice") ? parseInt(document.getElementById("standardPrice").value) || defaultCardPrices.standard : defaultCardPrices.standard,
+            plus: document.getElementById("plusPrice") ? parseInt(document.getElementById("plusPrice").value) || defaultCardPrices.plus : defaultCardPrices.plus
+        },
         cards: [],
         payments: []
     };
@@ -1258,6 +1276,10 @@ function saveAgent() {
         if (index !== -1) {
             agentData.cards = agents[index].cards;
             agentData.payments = agents[index].payments;
+            // الحفاظ على أسعار الكروت الحالية إذا لم يتم تحديد أسعار جديدة
+            if (agents[index].cardPrices) {
+                agentData.cardPrices = { ...agents[index].cardPrices, ...agentData.cardPrices };
+            }
             agents[index] = agentData;
         }
     } else {
@@ -1273,17 +1295,56 @@ function saveAgent() {
     updateReports();
 }
 
+// تحديث أسعار الكروت عند اختيار وكيل
+function updateCardPrices() {
+    const agentId = parseInt(document.getElementById("cardAgent").value);
+    const agent = agents.find(a => a.id === agentId);
+    
+    if (agent && agent.cardPrices) {
+        // استخدام أسعار الوكيل المخصصة إذا كانت موجودة
+        document.getElementById("cardPrice").value = agent.cardPrices[document.getElementById("cardType").value] || defaultCardPrices[document.getElementById("cardType").value];
+    } else {
+        // استخدام الأسعار الافتراضية
+        document.getElementById("cardPrice").value = defaultCardPrices[document.getElementById("cardType").value];
+    }
+    
+    calculateCardTotal();
+}
+
+// تحديث سعر الكارت عند تغيير النوع
+function updateCardPriceDisplay() {
+    const agentId = parseInt(document.getElementById("cardAgent").value);
+    const cardType = document.getElementById("cardType").value;
+    const agent = agents.find(a => a.id === agentId);
+    
+    if (agent && agent.cardPrices) {
+        document.getElementById("cardPrice").value = agent.cardPrices[cardType] || defaultCardPrices[cardType];
+    } else {
+        document.getElementById("cardPrice").value = defaultCardPrices[cardType];
+    }
+    
+    calculateCardTotal();
+}
+
+// حساب الإجمالي تلقائياً
+function calculateCardTotal() {
+    const count = parseInt(document.getElementById("cardsCount").value) || 0;
+    const price = parseInt(document.getElementById("cardPrice").value) || 0;
+    const total = count * price;
+    document.getElementById("cardTotal").value = total.toLocaleString() + " دينار";
+}
+
 // سحب كروت
 function addCards() {
     const agentId = parseInt(document.getElementById("cardAgent").value);
     const count = parseInt(document.getElementById("cardsCount").value);
     const type = document.getElementById("cardType").value;
+    const price = parseInt(document.getElementById("cardPrice").value);
     const date = document.getElementById("cardDate").value;
     const notes = document.getElementById("cardNotes").value;
     
     const agent = agents.find(a => a.id === agentId);
     if (agent) {
-        const price = cardPrices[type];
         const total = count * price;
         
         agent.cards.push({
@@ -1299,6 +1360,7 @@ function addCards() {
         updateAgentsTable();
         document.getElementById("cardsCount").value = 1;
         document.getElementById("cardNotes").value = "";
+        calculateCardTotal();
         updateReports();
     }
 }
@@ -1344,6 +1406,14 @@ function showCardDetails(agentId) {
         <p>إجمالي المبلغ: <strong>${totalDue.toLocaleString()} دينار</strong></p>
         <p>المسدد: <strong>${totalPaid.toLocaleString()} دينار</strong></p>
         <p>المتبقي: <strong>${remaining.toLocaleString()} دينار</strong></p>
+        <hr>
+        <h4>أسعار الكروت للوكيل:</h4>
+        <ul>
+            <li>NB1: <strong>${agent.cardPrices ? agent.cardPrices.nb1.toLocaleString() : defaultCardPrices.nb1.toLocaleString()} دينار</strong></li>
+            <li>ماكس: <strong>${agent.cardPrices ? agent.cardPrices.max.toLocaleString() : defaultCardPrices.max.toLocaleString()} دينار</strong></li>
+            <li>ستاندرد: <strong>${agent.cardPrices ? agent.cardPrices.standard.toLocaleString() : defaultCardPrices.standard.toLocaleString()} دينار</strong></li>
+            <li>بلص: <strong>${agent.cardPrices ? agent.cardPrices.plus.toLocaleString() : defaultCardPrices.plus.toLocaleString()} دينار</strong></li>
+        </ul>
         <hr>
         <h4>سجل سحب الكروت:</h4>
         <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
